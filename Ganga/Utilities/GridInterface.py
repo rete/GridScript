@@ -32,7 +32,7 @@ class CarefulLoader(object):
         for localFileName,targetLocation in fileDict:
             
             command = "export LFC_HOST={0}; ".format(self.host)
-            command += [self.uploadCommand, localFileName,targetLocation].join(" ")
+            command += " ".join([self.uploadCommand, localFileName,targetLocation])
             
             ret = os.system( command )
             
@@ -44,7 +44,7 @@ class CarefulLoader(object):
         """
         for localFileName,targetLocation in fileDict:
             command = "export LFC_HOST={0}; ".format(self.host)
-            command += [self.downloadCommand, localFileName,targetLocation].join(" ")
+            command += " ".join([self.downloadCommand, localFileName,targetLocation])
             
             ret = os.system( command )
             

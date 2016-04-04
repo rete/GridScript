@@ -1,25 +1,26 @@
 import os, sys
 from Ganga import *
-from GridScript.Ganga.Reconstruction import Marlin
+from GridScript.Ganga.Reconstruction.Marlin import Marlin
+from ConfigParser import ConfigParser
 
 
 """
 Helper function to create a ganga job
 """
 def createJob(executable, args = [], backend='CREAM', backendCE='lyogrid07.in2p3.fr:8443/cream-pbs-calice'):
-  j = Job()
-  j.application = Executable(exe=File(executable), args=args)
-  j.backend = backend
-  j.backend.CE = backendCE
-  return j
+    j = Job()
+    j.application = Executable(exe=File(executable), args=args)
+    j.backend = backend
+    j.backend.CE = backendCE
+    return j
 
 
 # reconstruction settings
 energy = "200"
-# runs = ["00"]
-# subruns = ["0"]
-runs = ["0"+str(i) for i in range(0, 10, 1)]
-subruns = [str(i) for i in range(0, 1000, 100)]
+runs = ["00"]
+subruns = ["0"]
+# runs = ["0"+str(i) for i in range(0, 10, 1)]
+# subruns = [str(i) for i in range(0, 1000, 100)]
 
 # ArborPFA settings
 ArborPFAVersion = "v02-01-00"
@@ -46,25 +47,25 @@ lcioOutputGridPath = "/grid/calice/SDHCAL/simu/ILD_o2_v05/"+lcioOutputFileSuffix
 pandoraOutputAnalysisGridPath = "/grid/calice/SDHCAL/simu/ILD_o2_v05/PANDORA_ANALYSIS"
 
 # Fill parser with base config
-parser = ConfigParser.ConfigParser()
-
+parser = ConfigParser()
+parser.optionxform=str
 parser.add_section("GridInput")
 parser.add_section("GridOutput")
 
 marlin = Marlin()
 marlin.setGearFile(gearFile)
-marlin.setMarlinXml(marlinXml)
+marlin.setMarlinXML(marlinXml)
 marlin.setLibraries(marlinDlls.split(':'))
 marlin.setIlcsoftInitScript(ilcsoftInitScript)
 
 marlin.setReplacementOption("global.Verbosity", "SILENT")
-marlin.setReplacementOption("MyMarlinArbor.PandoraSettingsXmlFile", "SILENT")
-
+marlin.setReplacementOption("MyMarlinArbor.PandoraSettingsXmlFile", pandoraXml)
+marlin.setReplacementOption("global.MaxRecordNumber", "1")
 
 for r in runs:
     for sr in subruns:
       
-        j = createJob()
+        j = createJob("/usr/bin/python")
         
         # build file names
         lcioInputFile = 'uds{0}_{1}.stdhep_{2}_100.slcio'.format(energy, r, sr)
@@ -89,8 +90,4 @@ for r in runs:
         f.close()
         
         j.application.args = ['/gridgroup/ilc/CommonSoft/GridScript/bin/run_marlin.py', configFileName]
-        j.submit()      
-      
-      
-      
-      
+        j.submit()

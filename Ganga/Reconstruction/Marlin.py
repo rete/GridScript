@@ -27,9 +27,6 @@ class Marlin(object):
     def setLibraries(self, libraries):
         """ Set the marlin dll libraries
         """
-        if not isinstance(libraries, list):
-            raise TypeError("Expected list type !")
-        
         self.libraries = libraries
     
     def addLibrary(self, library):
@@ -68,20 +65,21 @@ class Marlin(object):
         command = "source {0}; ".format(self.ilcsoftInitScript)
         
         # export marlin dlls
-        command += "export MARLIN_DLL={0}".format(self.libraries.join(":"))
+        command += "export MARLIN_DLL={0}; ".format(":".join(self.libraries))
 
         # marlin bin        
         command += "Marlin "
         
         if self.gearFile:
-            command += '--global.GearFile={0}'.format(self.gearFile)
+            command += '--global.GearXMLFile={0} '.format(self.gearFile)
         
-        for k, v in self.replacementOptions:
+        for k, v in self.replacementOptions.items():
             command += '--{0}={1} '.format(k, v)
         
         command += self.marlinXml;
         
         # run command
+        print "Running : '" + command + "'"
         return os.system(command)
     
     def readConfigFile(self, parser):
@@ -123,18 +121,19 @@ class Marlin(object):
 
         parser.set("Marlin", "MarlinXml", self.marlinXml)
         parser.set("Marlin", "GearFile", self.gearFile)
-        parser.set("Marlin", "MarlinDll", self.libraries.join(":"))
+        parser.set("Marlin", "MarlinDll", ":".join(self.libraries))
         parser.set("Marlin", "IlcsoftInitScript", self.ilcsoftInitScript)
         
-        for k,v in self.replacementOptions:
-            parser.set("MarlinReplacementOptions", str(k), str(v))
+        for k,v in self.replacementOptions.items():
+            parser.set("MarlinReplacementOptions", k, v)
     
     def runStandalone(self, fileName):
         """
         """
-        from GridScript.Ganga.Utilities import CarefulLoader
+        from GridScript.Ganga.Utilities.GridInterface import CarefulLoader
         
         parser = ConfigParser.ConfigParser()
+        parser.optionxform=str
         parser.read([fileName])
         
         # read marlin config
@@ -144,33 +143,38 @@ class Marlin(object):
         loader = CarefulLoader()
         
         try:
-            loader.setUploadCommand( parser.get("CarefulLoader", "uploadCommand") )
-        except ConfigParser.NoOptionError:
+            loader.setUploadCommand( parser.get("GridInput", "uploadCommand") )
+        except ConfigParser.NoOptionError, ConfigParser.NoSectionError:
             pass
         
         try:
-            loader.setDownloadCommand( parser.get("CarefulLoader", "downloadCommand") )
-        except ConfigParser.NoOptionError:
+            loader.setDownloadCommand( parser.get("GridOutput", "downloadCommand") )
+        except ConfigParser.NoOptionError, ConfigParser.NoSectionError:
             pass
         
         try:
-            loader.setHost( parser.get("CarefulLoader", "lfcHost") )
-        except ConfigParser.NoOptionError:
+            loader.setHost( parser.get("GridInput", "lfcHost") )
+        except ConfigParser.NoOptionError, ConfigParser.NoSectionError:
             pass
         
         # Download input files from grid
         try:
             loader.downloadFiles( parser.items("GridInput") )
-        except ConfigParser.NoOptionError:
+        except ConfigParser.NoOptionError, ConfigParser.NoSectionError:
             pass
         
         # run marlin
         self.run()
         
+        try:
+            loader.setHost( parser.get("GridOutput", "lfcHost") )
+        except ConfigParser.NoOptionError, ConfigParser.NoSectionError:
+            pass
+
         # Upload output files to grid
         try:
             loader.uploadFiles( parser.items("GridOutput") )
-        except ConfigParser.NoOptionError:
+        except ConfigParser.NoOptionError, ConfigParser.NoSectionError:
             pass
         
         
