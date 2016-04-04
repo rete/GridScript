@@ -60,7 +60,6 @@ marlin.setIlcsoftInitScript(ilcsoftInitScript)
 
 marlin.setReplacementOption("global.Verbosity", "SILENT")
 marlin.setReplacementOption("MyMarlinArbor.PandoraSettingsXmlFile", pandoraXml)
-marlin.setReplacementOption("global.MaxRecordNumber", "1")
 
 for r in runs:
     for sr in subruns:
