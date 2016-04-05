@@ -27,7 +27,7 @@ class Marlin(object):
     def setLibraries(self, libraries):
         """ Set the marlin dll libraries
         """
-        if type(libraries) is not type(list):
+        if not isinstance(libraries, list):
             raise TypeError("Expected list type !")
         
         self.libraries = libraries
